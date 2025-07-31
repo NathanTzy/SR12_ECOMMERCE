@@ -19,12 +19,12 @@ class UserController extends Controller
 
         $roles = Role::pluck('name');
 
-        return view('pages.backend.user .index', compact('users', 'roles'));
+        return view('pages.backend.user.index', compact('users', 'roles'));
     }
     public function create()
     {
         $roles = Role::all();
-        return view(' pages.backend.user .create', compact('roles'));
+        return view(' pages.backend.user.create', compact('roles'));
     }
 
 
@@ -51,7 +51,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::all();
-        return view('pages.backend.user .edit', compact('user', 'roles'));
+        return view('pages.backend.user.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
@@ -96,7 +96,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        return view('pages.backend.user .show', compact('user'));
+        return view('pages.backend.user.show', compact('user'));
     }
     
 
