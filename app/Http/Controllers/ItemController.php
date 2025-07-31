@@ -42,6 +42,7 @@ class ItemController extends Controller
             'img' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'harga' => 'required|numeric|min:0',
             'kuantitas' => 'required|integer|min:0',
+            'berat' => 'required|integer|min:1',
             'deskripsi' => 'required|string',
         ]);
 
@@ -53,6 +54,7 @@ class ItemController extends Controller
             'img' => $path,
             'harga' => $request->harga,
             'kuantitas' => $request->kuantitas,
+            'berat' => $request->berat,
             'deskripsi' => $request->deskripsi,
         ]);
 
@@ -68,15 +70,17 @@ class ItemController extends Controller
     public function update(Request $request, Item $item)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'nama' => 'required|string|max:255',
+            'category_id' => 'sometimes|exists:categories,id',
+            'nama' => 'sometimes|string|max:255',
             'img' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'harga' => 'required|numeric|min:0',
-            'kuantitas' => 'required|integer|min:0',
-            'deskripsi' => 'nullable|string',
+            'harga' => 'sometimes|numeric|min:0',
+            'kuantitas' => 'sometimes|integer|min:0',
+            'berat' => 'sometimes|integer|min:1',
+            'deskripsi' => 'sometimes|string',
         ]);
 
-        $data = $request->only(['category_id', 'nama', 'harga', 'kuantitas', 'deskripsi']);
+
+        $data = $request->only(['category_id', 'nama', 'harga', 'kuantitas', 'deskripsi', 'berat']);
 
         if ($request->hasFile('img')) {
             if ($item->img && Storage::disk('public')->exists($item->img)) {
@@ -126,13 +130,13 @@ class ItemController extends Controller
             $payment = $detail->payment;
             return ($payment->total ?? 0) + ($payment->ongkir ?? 0);
         });
-        
+
 
         $bulanList = collect(range(1, 12))->mapWithKeys(function ($m) {
             return [$m => \Carbon\Carbon::createFromDate(null, $m, 1)->format('F')];
         });
         $tahunList = range(now()->year - 5, now()->year);
 
-        return view('pages.backend.item.riwayat', compact('item', 'details', 'bulanList', 'tahunList', 'month', 'year', 'totalQty','totalBayarKeseluruhan'));
+        return view('pages.backend.item.riwayat', compact('item', 'details', 'bulanList', 'tahunList', 'month', 'year', 'totalQty', 'totalBayarKeseluruhan'));
     }
 }

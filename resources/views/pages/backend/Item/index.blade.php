@@ -62,61 +62,43 @@
                                         <th class="text-danger">Harga {{ ucfirst($role) }}</th>
                                     @endforeach
                                     <th>Stok</th>
+                                    <th>Berat</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 @forelse ($items as $item)
-                                    @php
-                                        $harga = $item->harga;
-                                        $hargaAgen = $harga - ($harga * ($discounts['agen'] ?? 0)) / 100;
-                                        $hargaSubAgen = $harga - ($harga * ($discounts['subAgen'] ?? 0)) / 100;
-                                    @endphp
-
-                                    <tr @if ($item->kuantitas == 0) class="table-danger" @endif>
+                                    <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            @if ($item->img && file_exists(public_path('storage/' . $item->img)))
-                                                <img src="{{ asset('storage/' . $item->img) }}" alt="Item"
-                                                    width="70" class="img-thumbnail rounded">
-                                            @else
-                                                <span class="text-muted">Tidak ada gambar</span>
-                                            @endif
+                                            <img src="{{ asset('storage/' . $item->img) }}" alt="{{ $item->nama }}"
+                                                width="50">
                                         </td>
                                         <td>{{ $item->nama }}</td>
-                                        <td>{{ $item->category->nama ?? '-' }}</td>
-                                        <td>Rp {{ number_format($harga, 0, ',', '.') }}</td>
+                                        <td>{{ $item->category->nama }}</td>
+                                        <td>Rp{{ number_format($item->harga) }}</td>
                                         @foreach ($discounts as $role => $percent)
-                                            @php
-                                                $hargaDiskon = $item->harga - ($item->harga * $percent) / 100;
-                                            @endphp
-                                            <td class="text-danger">
-                                                Rp {{ number_format($hargaDiskon, 0, ',', '.') }}
-                                                <br>
-                                                <small class="text-muted">-{{ $percent }}%</small>
-                                            </td>
+                                            <td>Rp{{ number_format($item->harga * (1 - $percent)) }}</td>
                                         @endforeach
-
                                         <td>{{ $item->kuantitas }}</td>
+                                        <td>{{ $item->berat }} gram</td>
                                         <td>
                                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                                <a href="{{ route('item.edit', $item->id) }}"
-                                                    class="btn btn-sm btn-warning">Edit</a>
-                                                <form action="{{ route('item.destroy', $item->id) }}" method="POST">
+                                                <a href="{{ route('item.edit', $item) }}"
+                                                    class="btn btn-sm btn-primary">Edit</a>
+                                                <form action="{{ route('item.destroy', $item) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Yakin hapus item ini?')">Hapus</button>
+                                                    <button onclick="return confirm('Yakin ingin menghapus item ini?')"
+                                                        class="btn btn-sm btn-danger">Hapus</button>
                                                 </form>
-                                                <a href="{{ route('item.riwayat', $item->id) }}"
-                                                    class="btn btn-sm btn-info">Riwayat</a>
                                             </div>
                                         </td>
-
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center">Belum ada item ditambahkan.</td>
+                                        <td colspan="{{ 9 + count($discounts) }}">Belum ada data item.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
