@@ -101,6 +101,11 @@
                         @if ($cartItems->isEmpty())
                             <div class="alert alert-warning">Belum ada barang di keranjang.</div>
                         @else
+                            @if ($alamatList->isEmpty())
+                                <a class="btn btn-dark" href="{{route('alamat.index')}}">
+                                    Buat alamat terlebih dahulu
+                                </a>
+                            @else
                             <select class="form-select" id="alamatSelect">
                                 <option value="" disabled selected>-- Pilih Alamat --</option>
                                 @foreach ($alamatList as $i => $alamat)
@@ -111,6 +116,7 @@
                                     </option>
                                 @endforeach
                             </select>
+                            @endif
 
                             <div id="alamatDetail" class="d-none mt-3">
                                 <div class="card shadow-sm border-0 bg-white">

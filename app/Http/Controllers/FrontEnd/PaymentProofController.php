@@ -80,7 +80,6 @@ class PaymentProofController extends Controller
             return back()->withErrors(['bukti_pembayaran' => 'File bukti transfer tidak ditemukan.']);
         }
 
-
         $validated = $request->validate([
             'payment_id' => 'required|exists:payments,id',
             'bukti_pembayaran' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -101,18 +100,14 @@ class PaymentProofController extends Controller
             'items.*.diskon' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        // biaya diluar sumsel
-        $alamat = is_array($validated['alamat']) ? $validated['alamat'] : json_decode($validated['alamat'], true);
+        $alamat = $validated['alamat'];
+        $provinsi = strtolower($alamat['provinsi']);
+        $totalItem = collect($validated['items'])->sum('qty');
 
-        $provinsi = strtolower(trim($alamat['provinsi'] ?? ''));
-        $totalItem = array_sum(array_column($validated['items'], 'qty'));
-
-        $provinsi = strtolower(trim($alamat['provinsi'] ?? ''));
-
-        $ongkir = (str_contains($provinsi, 'sumatera selatan') || str_contains($provinsi, 'sumsel'))
-            ? 0
-            : $totalItem * 1000;
-
+        // Ongkir = 0 jika kirim ke Sumatera Selatan
+        $ongkir = (!str_contains($provinsi, 'sumatera selatan') && !str_contains($provinsi, 'sumsel'))
+            ? $totalItem * 1000
+            : 0;
 
         $totalWithOngkir = $validated['summary']['total'] + $ongkir;
 
@@ -120,11 +115,11 @@ class PaymentProofController extends Controller
             'user_id' => auth()->id(),
             'payment_id' => $validated['payment_id'],
             'bukti_tf' => $path,
-            'nama_penerima' => $validated['alamat']['nama'],
-            'alamat' => $validated['alamat']['alamat'],
-            'kota' => $validated['alamat']['kota'],
-            'provinsi' => $validated['alamat']['provinsi'],
-            'telp' => $validated['alamat']['telp'],
+            'nama_penerima' => $alamat['nama'],
+            'alamat' => $alamat['alamat'],
+            'kota' => $alamat['kota'],
+            'provinsi' => $alamat['provinsi'],
+            'telp' => $alamat['telp'],
             'subtotal' => $validated['summary']['subtotal'],
             'diskon_persen' => $validated['summary']['diskon_persen'] ?? 0,
             'total' => $totalWithOngkir,
@@ -132,8 +127,6 @@ class PaymentProofController extends Controller
             'ongkir' => $ongkir,
         ]);
 
-
-        // Simpan item detail
         foreach ($validated['items'] as $item) {
             PaymentProofDetail::create([
                 'payment_proof_id' => $paymentProof->id,
@@ -148,6 +141,7 @@ class PaymentProofController extends Controller
 
         return redirect()->route('cart.index')->with('success', 'Bukti pembayaran berhasil dikirim.');
     }
+
 
     public function accBatal($id)
     {

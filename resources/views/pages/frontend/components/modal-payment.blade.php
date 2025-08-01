@@ -249,9 +249,10 @@
             const totalQty = {{ $cartItems->sum('qty') }};
             let ongkir = 0;
             const provBersih = provinsi.trim().toLowerCase();
-            if (provBersih === 'sumatera selatan' || provBersih === 'sumsel') {
+            if (provBersih !== 'sumatera selatan' && provBersih !== 'sumsel') {
                 ongkir = 1000 * totalQty;
             }
+
 
             document.getElementById("inputOngkir").value = ongkir;
             document.getElementById("modalOngkir").textContent = `Rp ${ongkir.toLocaleString("id-ID")}`;

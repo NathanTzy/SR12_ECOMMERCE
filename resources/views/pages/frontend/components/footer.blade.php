@@ -4,14 +4,12 @@
             <div class="row">
                 <div class="col-lg-3">
                     <div class="first-item">
-                        <div class="logo">
-                            <img src="{{ asset('frontend/images/white-logo.png') }}" alt="hexashop ecommerce templatemo">
-                        </div>
+                        
                         <ul>
-                            <li><a href="#">16501 Collins Ave, Sunny Isles Beach, FL 33160, United States</a>
+                            <li><a href="#">Palembang, komp pemda, jl sulaiman amin, blok h1 no 24</a>
                             </li>
-                            <li><a href="#">hexashop@company.com</a></li>
-                            <li><a href="#">010-020-0340</a></li>
+                            <li><a href="#">sr12palembang.com</a></li>
+                            <li><a href="#">+62 853-8058-7701</a></li>
                         </ul>
                     </div>
                 </div>

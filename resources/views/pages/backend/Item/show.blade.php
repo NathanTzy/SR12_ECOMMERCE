@@ -87,18 +87,6 @@
                                 @enderror
                             </div>
                             
-                            {{-- Berat --}}
-                            <div class="form-group">
-                                <label>Berat (gram)</label>
-                                <input type="number" name="berat"
-                                    class="form-control @error('berat') is-invalid @enderror"
-                                    value="{{ old('berat', $item->berat) }}" required>
-                                @error('berat')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-
                             {{-- Deskripsi --}}
                             <div class="form-group">
                                 <label>Deskripsi</label>

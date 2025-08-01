@@ -41,8 +41,7 @@ class ItemController extends Controller
             'nama' => 'required|string|max:255',
             'img' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'harga' => 'required|numeric|min:0',
-            'kuantitas' => 'required|integer|min:0',
-            'berat' => 'required|integer|min:1',
+            'kuantitas' => 'required|integer|min:0',           
             'deskripsi' => 'required|string',
         ]);
 
@@ -53,8 +52,7 @@ class ItemController extends Controller
             'nama' => $request->nama,
             'img' => $path,
             'harga' => $request->harga,
-            'kuantitas' => $request->kuantitas,
-            'berat' => $request->berat,
+            'kuantitas' => $request->kuantitas, 
             'deskripsi' => $request->deskripsi,
         ]);
 
@@ -75,12 +73,11 @@ class ItemController extends Controller
             'img' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'harga' => 'sometimes|numeric|min:0',
             'kuantitas' => 'sometimes|integer|min:0',
-            'berat' => 'sometimes|integer|min:1',
             'deskripsi' => 'sometimes|string',
         ]);
 
 
-        $data = $request->only(['category_id', 'nama', 'harga', 'kuantitas', 'deskripsi', 'berat']);
+        $data = $request->only(['category_id', 'nama', 'harga', 'kuantitas', 'deskripsi']);
 
         if ($request->hasFile('img')) {
             if ($item->img && Storage::disk('public')->exists($item->img)) {

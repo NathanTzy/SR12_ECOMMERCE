@@ -50,7 +50,6 @@
 
                     <div class="card-body table-responsive">
                         <table class="table table-bordered table-hover text-center align-middle" style="min-width: 1000px">
-
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -62,11 +61,9 @@
                                         <th class="text-danger">Harga {{ ucfirst($role) }}</th>
                                     @endforeach
                                     <th>Stok</th>
-                                    <th>Berat</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @forelse ($items as $item)
                                     <tr>
@@ -79,10 +76,16 @@
                                         <td>{{ $item->category->nama }}</td>
                                         <td>Rp{{ number_format($item->harga) }}</td>
                                         @foreach ($discounts as $role => $percent)
-                                            <td>Rp{{ number_format($item->harga * (1 - $percent)) }}</td>
+                                            @php
+                                                $hargaDiskon = $item->harga * ((100 - $percent) / 100);
+                                            @endphp
+                                            <td>
+                                                Rp{{ number_format($hargaDiskon) }}
+                                                <small class="text-muted">({{ $percent }}% off)</small>
+                                            </td>
                                         @endforeach
+
                                         <td>{{ $item->kuantitas }}</td>
-                                        <td>{{ $item->berat }} gram</td>
                                         <td>
                                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                                 <a href="{{ route('item.edit', $item) }}"
@@ -93,6 +96,8 @@
                                                     <button onclick="return confirm('Yakin ingin menghapus item ini?')"
                                                         class="btn btn-sm btn-danger">Hapus</button>
                                                 </form>
+                                                <a class="btn btn-primary"
+                                                    href="{{ route('item.riwayat', $item) }}">Riwayat</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -102,14 +107,12 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-
                         </table>
                         <div class="d-flex justify-content-center mt-3">
                             {{ $items->links() }}
                         </div>
                     </div>
                 </div>
-
             </div>
         </section>
     </div>

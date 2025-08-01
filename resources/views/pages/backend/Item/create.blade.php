@@ -91,18 +91,6 @@
                                 @enderror
                             </div>
 
-                            {{-- Berat --}}
-                            <div class="form-group">
-                                <label>Berat (gram)</label>
-                                <input type="number" name="berat"
-                                    class="form-control @error('berat') is-invalid @enderror"
-                                    required>
-                                @error('berat')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-
                             <div class="form-group">
                                 <label>Deskripsi</label>
                                 <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror" rows="3" required>{{ old('deskripsi') }}</textarea>

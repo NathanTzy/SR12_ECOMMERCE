@@ -13,7 +13,6 @@ class Item extends Model
         'harga',
         'kuantitas',
         'deskripsi',
-        'berat',
     ];
 
 
