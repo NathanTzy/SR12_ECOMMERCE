@@ -8,24 +8,34 @@ use App\Models\Payment;
 use App\Models\PaymentProof;
 use App\Models\PaymentProofDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
+/**
+ * Controller untuk mengelola bukti pembayaran:
+ * - List transaksi
+ * - Upload bukti pembayaran
+ * - Update status pesanan
+ * - Melihat detail pesanan
+ * - Pembatalan dan penolakan pembatalan pesanan
+ */
 class PaymentProofController extends Controller
 {
-
+    /**
+     * Menampilkan daftar bukti pembayaran (pesanan) di backend.
+     * Mendukung filter status.
+     */
     public function index(Request $request)
     {
         $query = PaymentProof::with(['details.item', 'user'])
             ->orderBy('created_at', 'desc');
 
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $allTransaksi = $query->latest()->paginate(5);
 
+        // Hitung jumlah pesanan berdasarkan status
         $pending = PaymentProof::where('status', 'pending')->count();
         $diproses = PaymentProof::where('status', 'diproses')->count();
         $selesai = PaymentProof::where('status', 'selesai')->count();
@@ -40,8 +50,13 @@ class PaymentProofController extends Controller
         ));
     }
 
-
-    public function updateStatus(Request $request, $id)
+    /**
+     * Mengubah status pesanan.
+     *
+     * @param Request $request
+     * @param int $id ID detail pesanan (PaymentProofDetail)
+     */
+    public function updateStatus(Request $request, int $id)
     {
         $request->validate([
             'status' => 'required|in:pending,diproses,selesai'
@@ -61,25 +76,31 @@ class PaymentProofController extends Controller
         return back()->with('success', 'Status berhasil diperbarui');
     }
 
-    public function show($id)
+    /**
+     * Menampilkan detail pesanan.
+     */
+    public function show(int $id)
     {
-
-        $payment = PaymentProof::with(['details.item', 'details.paymentProof'])->findOrFail($id);
+        $payment = PaymentProof::with(['details.item', 'details.paymentProof'])
+            ->findOrFail($id);
 
         return view('pages.backend.pesanan.show', compact('payment'));
     }
 
-
-
+    /**
+     * Menyimpan bukti pembayaran baru.
+     * Sekaligus menghitung ongkir jika di luar Pulau Jawa.
+     */
     public function store(Request $request)
     {
-        if ($request->hasFile('bukti_pembayaran')) {
-            $file = $request->file('bukti_pembayaran');
-            $path = $file->store('bukti_tf', 'public');
-        } else {
+        // Validasi file bukti transfer
+        if (!$request->hasFile('bukti_pembayaran')) {
             return back()->withErrors(['bukti_pembayaran' => 'File bukti transfer tidak ditemukan.']);
         }
 
+        $path = $request->file('bukti_pembayaran')->store('bukti_tf', 'public');
+
+        // Validasi data input
         $validated = $request->validate([
             'payment_id' => 'required|exists:payments,id',
             'bukti_pembayaran' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -104,13 +125,26 @@ class PaymentProofController extends Controller
         $provinsi = strtolower($alamat['provinsi']);
         $totalItem = collect($validated['items'])->sum('qty');
 
-        // Ongkir = 0 jika kirim ke Sumatera Selatan
-        $ongkir = (!str_contains($provinsi, 'sumatera selatan') && !str_contains($provinsi, 'sumsel'))
+        // List provinsi di Pulau Jawa
+        $provinsiJawa = [
+            'banten',
+            'dki jakarta',
+            'jakarta',
+            'jawa barat',
+            'jawa tengah',
+            'di yogyakarta',
+            'yogyakarta',
+            'jawa timur',
+        ];
+
+        // Hitung ongkir: jika provinsi tidak di Pulau Jawa → 1000 per item
+        $ongkir = (!collect($provinsiJawa)->contains(fn($p) => str_contains($provinsi, $p)))
             ? $totalItem * 1000
             : 0;
 
         $totalWithOngkir = $validated['summary']['total'] + $ongkir;
 
+        // Simpan data PaymentProof
         $paymentProof = PaymentProof::create([
             'user_id' => auth()->id(),
             'payment_id' => $validated['payment_id'],
@@ -127,6 +161,7 @@ class PaymentProofController extends Controller
             'ongkir' => $ongkir,
         ]);
 
+        // Simpan detail setiap item
         foreach ($validated['items'] as $item) {
             PaymentProofDetail::create([
                 'payment_proof_id' => $paymentProof->id,
@@ -137,28 +172,31 @@ class PaymentProofController extends Controller
             ]);
         }
 
+        // Hapus cart user setelah checkout
         CartItem::where('user_id', auth()->id())->delete();
 
         return redirect()->route('cart.index')->with('success', 'Bukti pembayaran berhasil dikirim.');
     }
 
-
-    public function accBatal($id)
+    /**
+     * ACC pembatalan pesanan → hapus data.
+     */
+    public function accBatal(int $id)
     {
         $transaksi = PaymentProof::findOrFail($id);
-
-        // Hapus bukti & detail
         $transaksi->details()->delete();
         $transaksi->delete();
 
         return back()->with('success', 'Pesanan berhasil dibatalkan dan dihapus.');
     }
 
-    public function tolakBatal($id)
+    /**
+     * Tolak pembatalan pesanan → kembalikan status jadi pending.
+     */
+    public function tolakBatal(int $id)
     {
         $transaksi = PaymentProof::findOrFail($id);
-        $transaksi->status = 'pending';
-        $transaksi->save();
+        $transaksi->update(['status' => 'pending']);
 
         return back()->with('success', 'Permintaan pembatalan ditolak, pesanan kembali diproses.');
     }

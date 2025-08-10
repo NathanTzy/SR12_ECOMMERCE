@@ -1,7 +1,8 @@
 <!-- Modal -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="POST" action="{{ route('payment-proof.store') }}" enctype="multipart/form-data" class="modal-content">
+        <form method="POST" action="{{ route('payment-proof.store') }}" enctype="multipart/form-data"
+            class="modal-content">
             @csrf
             <div class="modal-header">
                 <h5 class="modal-title">Konfirmasi Pembayaran</h5>
@@ -16,7 +17,8 @@
                         <option value="">-- Pilih Bank --</option>
                         @foreach ($payments as $payment)
                             <option value="{{ $payment->id }}" data-nama="{{ $payment->nama_bank }}"
-                                data-atas-nama="{{ $payment->atas_nama }}" data-no-rekening="{{ $payment->no_rekening }}">
+                                data-atas-nama="{{ $payment->atas_nama }}"
+                                data-no-rekening="{{ $payment->no_rekening }}">
                                 {{ $payment->nama_bank }} - {{ $payment->atas_nama }}
                             </option>
                         @endforeach
@@ -27,13 +29,23 @@
                 <div id="paymentInfo" class="border rounded p-3 mb-3 d-none">
                     <p><strong id="bankNama"></strong></p>
                     <p>A/N: <span id="bankAtasNama"></span></p>
-                    <p>No Rek: <span id="bankNoRek"></span></p>
+                    <p>
+                        No Rek:
+                        <span id="bankNoRek" style="user-select: all;"></span>
+                        <button type="button" id="copyRekBtn" class="btn btn-sm btn-outline-success ms-2"
+                            title="Copy No Rekening"
+                            style="padding: 10px 10px; font-size: 1rem; vertical-align: middle;">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+
+                    </p>
                 </div>
 
                 <!-- Upload Bukti -->
                 <div class="mb-3">
                     <label class="form-label">Upload Bukti Transfer</label>
-                    <input type="file" name="bukti_pembayaran" class="form-control" id="buktiInput" accept="image/*" required>
+                    <input type="file" name="bukti_pembayaran" class="form-control" id="buktiInput" accept="image/*"
+                        required>
                 </div>
 
                 <!-- Preview Bukti -->
@@ -66,7 +78,8 @@
                         @php $subtotal = 0; @endphp
                         @foreach ($cartItems as $item)
                             @php
-                                $subtotalBarang = $item->qty * $item->harga_saat_itulah * (1 - ($item->diskon ?? 0) / 100);
+                                $subtotalBarang =
+                                    $item->qty * $item->harga_saat_itulah * (1 - ($item->diskon ?? 0) / 100);
                                 $subtotal += $subtotalBarang;
                             @endphp
                             <div class="list-group-item d-flex justify-content-between">
@@ -119,16 +132,16 @@
             @foreach ($cartItems as $index => $item)
                 <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $item->item->id }}">
                 <input type="hidden" name="items[{{ $index }}][qty]" value="{{ $item->qty }}">
-                <input type="hidden" name="items[{{ $index }}][harga]" value="{{ $item->harga_saat_itulah }}">
+                <input type="hidden" name="items[{{ $index }}][harga]"
+                    value="{{ $item->harga_saat_itulah }}">
                 <input type="hidden" name="items[{{ $index }}][diskon]" value="{{ $item->diskon ?? 0 }}">
             @endforeach
         </form>
     </div>
 </div>
 
-
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const paymentSelect = document.getElementById("paymentSelect");
         const paymentInfo = document.getElementById("paymentInfo");
         const bankNama = document.getElementById("bankNama");
@@ -138,9 +151,11 @@
         const previewContainer = document.getElementById("previewContainer");
         const previewImage = document.getElementById("previewImage");
         const checkoutModal = document.getElementById("checkoutModal");
-    
+
+        const copyRekBtn = document.getElementById("copyRekBtn");
+
         // Update informasi bank
-        paymentSelect.addEventListener("change", function () {
+        paymentSelect.addEventListener("change", function() {
             const option = this.options[this.selectedIndex];
             if (option.value !== "") {
                 bankNama.textContent = option.dataset.nama;
@@ -149,15 +164,33 @@
                 paymentInfo.classList.remove("d-none");
             } else {
                 paymentInfo.classList.add("d-none");
+                bankNoRek.textContent = "";
             }
         });
-    
+
+        // Copy nomor rekening ke clipboard
+        copyRekBtn.addEventListener("click", function() {
+            const textToCopy = bankNoRek.textContent.trim();
+            if (!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                copyRekBtn.setAttribute('title', 'Copied!');
+                copyRekBtn.classList.add('btn-success');
+                setTimeout(() => {
+                    copyRekBtn.setAttribute('title', 'Copy No Rekening');
+                    copyRekBtn.classList.remove('btn-success');
+                }, 1500);
+            }).catch(() => {
+                alert('Gagal menyalin nomor rekening');
+            });
+        });
+
         // Preview bukti transfer
-        buktiInput.addEventListener("change", function () {
+        buktiInput.addEventListener("change", function() {
             const file = this.files[0];
             if (file && file.type.startsWith("image/")) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     previewImage.src = e.target.result;
                     previewContainer.classList.remove("d-none");
                 };
@@ -166,41 +199,55 @@
                 previewContainer.classList.add("d-none");
             }
         });
-    
+
         // Saat modal tampil, isi data alamat & ongkir
-        checkoutModal.addEventListener("shown.bs.modal", function () {
+        checkoutModal.addEventListener("shown.bs.modal", function() {
             const alamatSelect = document.getElementById("alamatSelect");
             const selected = alamatSelect?.options[alamatSelect.selectedIndex];
-    
+
             const nama = selected?.dataset.nama || '';
             const alamat = selected?.dataset.alamat || '';
             const kota = selected?.dataset.kota || '';
             const provinsi = selected?.dataset.provinsi || '';
             const telp = selected?.dataset.telp || '';
-    
+
             document.getElementById("modalNamaPenerima").textContent = nama;
             document.getElementById("modalAlamatLengkap").textContent = alamat;
             document.getElementById("modalKotaProvinsi").textContent = `${kota}, ${provinsi}`;
             document.getElementById("modalTelepon").textContent = `Telp: ${telp}`;
-    
+
             document.getElementById("inputNamaPenerima").value = nama;
             document.getElementById("inputAlamatLengkap").value = alamat;
             document.getElementById("inputKota").value = kota;
             document.getElementById("inputProvinsi").value = provinsi;
             document.getElementById("inputTelp").value = telp;
-    
+
             const totalQty = {{ $cartItems->sum('qty') }};
             const provBersih = provinsi.trim().toLowerCase();
-            const ongkir = (provBersih !== 'sumatera selatan' && provBersih !== 'sumsel') ? 1000 * totalQty : 0;
-    
+
+            // Daftar provinsi di Pulau Jawa
+            const provinsiJawa = [
+                'banten',
+                'dki jakarta',
+                'jawa barat',
+                'jawa tengah',
+                'di yogyakarta',
+                'jawa timur'
+            ];
+
+            // Kalau alamat provinsi ada di daftar Jawa -> ongkir 1000 per item
+            const ongkir = !provinsiJawa.includes(provBersih) ? 1000 * totalQty : 0;
+
             document.getElementById("inputOngkir").value = ongkir;
             document.getElementById("modalOngkir").textContent = `Rp ${ongkir.toLocaleString("id-ID")}`;
-    
-            const totalSetelahDiskon = {{ $subtotal }} - ({{ $subtotal }} * {{ $diskonPersen }} / 100);
+
+            const totalSetelahDiskon = {{ $subtotal }} - ({{ $subtotal }} *
+                {{ $diskonPersen }} / 100);
             const totalDenganOngkir = totalSetelahDiskon + ongkir;
-    
-            document.getElementById("modalTotalBayar").textContent = `Rp${totalDenganOngkir.toLocaleString("id-ID")}`;
+
+            document.getElementById("modalTotalBayar").textContent =
+                `Rp${totalDenganOngkir.toLocaleString("id-ID")}`;
         });
+
     });
-    </script>
-    
+</script>

@@ -91,33 +91,38 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($details as $detail)
+                                @forelse ($purchases as $detail)
                                     @php
+                                        // Data dasar
                                         $qty = $detail->qty;
                                         $hargaBarang = $detail->harga ?? ($detail->barang->harga ?? 0);
                                         $diskonPersen = $detail->payment->diskon_persen ?? 0;
-                                        $hargaDiskon = $hargaBarang - ($hargaBarang * $diskonPersen) / 100;
-                                        $subtotal = $hargaDiskon * $qty;
                                         $ongkir = $detail->payment->ongkir ?? 0;
+
+                                        // Hitung diskon
+                                        $hargaDiskon = $hargaBarang * (1 - $diskonPersen / 100);
+
+                                        // Subtotal & total akhir
+                                        $subtotal = $hargaDiskon * $qty;
                                         $totalAkhir = $subtotal + $ongkir;
                                     @endphp
 
                                     <tr>
                                         <td>{{ $detail->payment->user->name ?? '-' }}</td>
                                         <td><span class="badge badge-primary">{{ $qty }}</span></td>
-                                        <td>Rp{{ number_format($subtotal, 0, ',', '.') }}</td> 
+                                        <td>Rp{{ number_format($subtotal, 0, ',', '.') }}</td>
                                         <td><span class="text-danger font-weight-bold">{{ $diskonPersen }}%</span></td>
                                         <td>Rp{{ number_format($ongkir, 0, ',', '.') }}</td>
                                         <td class="fw-bold text-success">Rp{{ number_format($totalAkhir, 0, ',', '.') }}
                                         </td>
                                     </tr>
-
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-muted">Tidak ada data riwayat pembelian.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
+
                         </table>
 
                     </div>

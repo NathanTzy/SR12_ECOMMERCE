@@ -25,6 +25,13 @@
                         <h4>Data User</h4>
                     </div>
 
+                    <form method="GET" action="{{ route('users.index') }}" class="d-flex mb-3 mx-5" style="gap: 8px;">
+                        <input type="text" name="search" value="{{ request('search') }}" class="form-control"
+                            placeholder="Cari nama">
+                        <button class="btn btn-primary">Cari</button>
+                    </form>
+
+
                     {{-- Filter Role --}}
                     <div class="mb-3">
                         <div class="d-flex justify-content-center flex-wrap">

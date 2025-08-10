@@ -65,6 +65,99 @@
                                 <td>{{ $user->getRoleNames()->first() }}</td>
                             </tr>
                         </table>
+
+                        <h4 class="mt-5 mb-3 ml-3">Riwayat Pembelian</h4>
+                        @php
+                            $totalUangMasuk = $purchases->sum(function ($purchase) {
+                                return $purchase->details->sum(function ($d) {
+                                    $hargaBarang = $d->harga ?? ($d->item->harga ?? 0);
+                                    $diskonPersen = $d->payment->diskon_persen ?? 0;
+                                    $ongkir = $d->payment->ongkir ?? 0;
+
+                                    $hargaDiskon = $hargaBarang * (1 - $diskonPersen / 100);
+                                    $subtotal = $hargaDiskon * $d->qty;
+
+                                    return $subtotal + $ongkir;
+                                });
+                            });
+                        @endphp
+                        <form method="GET" action="" class="form-inline mb-4 ml-3">
+                            <select name="tahun" class="form-control mr-2">
+                                <option value="">Pilih Tahun</option>
+                                @foreach (range(date('Y'), 2020) as $y)
+                                    <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>
+                                        {{ $y }}</option>
+                                @endforeach
+                            </select>
+
+                            <select name="bulan" class="form-control mr-2">
+                                <option value="">Pilih Bulan</option>
+                                @foreach (range(1, 12) as $m)
+                                    <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
+                                        {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+
+                        <h4 class="mb-5 ml-3">
+                            Total uang masuk :
+                            <span class="badge badge-primary">Rp {{ number_format($totalUangMasuk, 0, ',', '.') }}</span>
+                        </h4>
+
+                        @if ($purchases->isEmpty())
+                            <p class="ml-3">Belum ada pembelian.</p>
+                        @else
+                            <table class="table mb-5">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu pemesanan</th>
+                                        <th>Item</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($purchases as $purchase)
+                                        <tr>
+                                            <td>{{ $purchase->created_at->format('d-m-Y H:i') }}</td>
+                                            <td>
+                                                <ul>
+                                                    @foreach ($purchase->details as $detail)
+                                                        <li>{{ $detail->item->nama }} (x{{ $detail->qty }})</li>
+                                                    @endforeach
+                                                </ul>
+                                            </td>
+                                            <td>Rp
+                                                {{ number_format(
+                                                    $purchase->details->sum(function ($d) {
+                                                        $hargaBarang = $d->harga ?? ($d->item->harga ?? 0);
+                                                        $diskonPersen = $d->payment->diskon_persen ?? 0;
+                                                        $ongkir = $d->payment->ongkir ?? 0;
+                                                
+                                                        // Hitung harga setelah diskon
+                                                        $hargaDiskon = $hargaBarang * (1 - $diskonPersen / 100);
+                                                
+                                                        // Hitung subtotal per item
+                                                        $subtotal = $hargaDiskon * $d->qty;
+                                                
+                                                        // Tambah ongkir
+                                                        return $subtotal + $ongkir;
+                                                    }),
+                                                    0,
+                                                    ',',
+                                                    '.',
+                                                ) }}
+                                            </td>
+
+
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+
                     </div>
                     <button class="btn btn-success mb-3 mx-5" onclick="copyToClipboard()">
                         <i class="fas fa-copy"></i> Salin ke Spreadsheet

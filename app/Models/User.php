@@ -45,4 +45,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function paymentProofs()
+{
+    return $this->hasMany(PaymentProof::class, 'user_id');
+}
+
 }

@@ -47,7 +47,11 @@
                     <div class="card-header">
                         <h4>Data Item</h4>
                     </div>
-
+                    <form method="GET" action="{{ route('item.index') }}" class="mb-3 mx-4">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama item..."
+                            class="form-control" style="width: 250px; display: inline-block;">
+                        <button type="submit" class="btn btn-primary mx-3">Cari</button>
+                    </form>
                     <div class="card-body table-responsive">
                         <table class="table table-bordered table-hover text-center align-middle" style="min-width: 1000px">
                             <thead>
@@ -66,7 +70,7 @@
                             </thead>
                             <tbody>
                                 @forelse ($items as $item)
-                                    <tr>
+                                    <tr @if ($item->kuantitas == 0) style="background-color: #f8d7da;" @endif>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
                                             <img src="{{ asset('storage/' . $item->img) }}" alt="{{ $item->nama }}"
@@ -84,7 +88,6 @@
                                                 <small class="text-muted">({{ $percent }}% off)</small>
                                             </td>
                                         @endforeach
-
                                         <td>{{ $item->kuantitas }}</td>
                                         <td>
                                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -106,6 +109,7 @@
                                         <td colspan="{{ 9 + count($discounts) }}">Belum ada data item.</td>
                                     </tr>
                                 @endforelse
+
                             </tbody>
                         </table>
                         <div class="d-flex justify-content-center mt-3">

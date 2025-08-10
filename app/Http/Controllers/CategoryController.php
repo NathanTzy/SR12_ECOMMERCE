@@ -14,7 +14,6 @@ class CategoryController extends Controller
         return view('pages.backend.Category.index', compact('categories'));
     }
 
-
     public function create()
     {
         return view('pages.backend.Category.create');
@@ -24,7 +23,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'img' => 'required|image|max:2048',
+            'img'  => 'required|image|max:2048',
         ]);
 
         $data = $request->only('nama');
@@ -35,7 +34,9 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return redirect()->route('category.index')->with('success', 'Kategori berhasil ditambahkan');
+        return redirect()
+            ->route('category.index')
+            ->with('success', 'Kategori berhasil ditambahkan');
     }
 
     public function edit(Category $category)
@@ -47,7 +48,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'img' => 'nullable|image|max:2048',
+            'img'  => 'nullable|image|max:2048',
         ]);
 
         $data = $request->only('nama');
@@ -56,13 +57,14 @@ class CategoryController extends Controller
             if ($category->img) {
                 Storage::disk('public')->delete($category->img);
             }
-
             $data['img'] = $request->file('img')->store('categories', 'public');
         }
 
         $category->update($data);
 
-        return redirect()->route('category.index')->with('success', 'Kategori berhasil diperbarui');
+        return redirect()
+            ->route('category.index')
+            ->with('success', 'Kategori berhasil diperbarui');
     }
 
     public function destroy(Category $category)

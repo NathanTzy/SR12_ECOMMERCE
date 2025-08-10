@@ -102,20 +102,20 @@
                             <div class="alert alert-warning">Belum ada barang di keranjang.</div>
                         @else
                             @if ($alamatList->isEmpty())
-                                <a class="btn btn-dark" href="{{route('alamat.index')}}">
+                                <a class="btn btn-dark" href="{{ route('alamat.index') }}">
                                     Buat alamat terlebih dahulu
                                 </a>
                             @else
-                            <select class="form-select" id="alamatSelect">
-                                <option value="" disabled selected>-- Pilih Alamat --</option>
-                                @foreach ($alamatList as $i => $alamat)
-                                    <option value="{{ $alamat->id }}" data-nama="{{ $alamat->nama_penerima }}"
-                                        data-alamat="{{ $alamat->alamat_lengkap }}" data-kota="{{ $alamat->kota }}"
-                                        data-provinsi="{{ $alamat->provinsi }}" data-telp="{{ $alamat->no_telp }}">
-                                        Alamat {{ $i + 1 }}
-                                    </option>
-                                @endforeach
-                            </select>
+                                <select class="form-select" id="alamatSelect">
+                                    <option value="" disabled selected>-- Pilih Alamat --</option>
+                                    @foreach ($alamatList as $i => $alamat)
+                                        <option value="{{ $alamat->id }}" data-nama="{{ $alamat->nama_penerima }}"
+                                            data-alamat="{{ $alamat->alamat_lengkap }}" data-kota="{{ $alamat->kota }}"
+                                            data-provinsi="{{ $alamat->provinsi }}" data-telp="{{ $alamat->no_telp }}">
+                                            Alamat {{ $i + 1 }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             @endif
 
                             <div id="alamatDetail" class="d-none mt-3">
@@ -141,17 +141,29 @@
                             $subtotal = 0;
                             $ongkirPerItem = 0;
 
+                            // Provinsi bebas ongkir (Pulau Jawa)
+                            $provinsiBebasOngkir = [
+                                'banten',
+                                'dki jakarta',
+                                'jakarta',
+                                'jawa barat',
+                                'jawa tengah',
+                                'di yogyakarta',
+                                'yogyakarta',
+                                'jawa timur',
+                            ];
+
                             foreach ($cartItems as $item) {
                                 $hargaAsli = $item->item->harga;
                                 $qty = $item->qty;
                                 $subtotal += $hargaAsli * $qty;
 
-                                // Tambah ongkir per item jika provinsi = sumsel
-                                if (
-                                    isset($alamatUser->provinsi) &&
-                                    !in_array(strtolower($alamatUser->provinsi), ['sumatera selatan', 'sumsel'])
-                                ) {
-                                    $ongkirPerItem += 1000 * $qty;
+                                if (isset($alamatUser->provinsi)) {
+                                    $prov = strtolower($alamatUser->provinsi);
+                                    // Jika provinsi tidak ada di list bebas ongkir → kena ongkir 1000 per item
+                                    if (!in_array($prov, $provinsiBebasOngkir)) {
+                                        $ongkirPerItem += 1000 * $qty;
+                                    }
                                 }
                             }
 
@@ -160,6 +172,7 @@
                             $totalSetelahDiskon = $subtotal - $totalDiskon;
                             $totalAkhir = $totalSetelahDiskon + $ongkirPerItem;
                         @endphp
+
 
                         <ul class="list-group mb-3">
                             <input type="hidden" id="ongkirInput" name="ongkir" value="{{ $ongkirPerItem }}">
@@ -243,9 +256,21 @@
                             totalQty += {{ $item->qty }};
                         @endforeach
 
+                        // Provinsi bebas ongkir
+                        const provinsiBebasOngkir = [
+                            'banten',
+                            'dki jakarta',
+                            'jakarta',
+                            'jawa barat',
+                            'jawa tengah',
+                            'di yogyakarta',
+                            'yogyakarta',
+                            'jawa timur'
+                        ];
+
                         let ongkir = 0;
                         const prov = provinsi?.toLowerCase().trim() || '';
-                        if (!(prov.includes('sumatera selatan') || prov.includes('sumsel'))) {
+                        if (!provinsiBebasOngkir.some(p => prov.includes(p))) {
                             ongkir = 1000 * totalQty;
                         }
 
